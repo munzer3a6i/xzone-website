@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'PolySans Trial';
+  src: url('/fonts/polysans/polysanstrial-neutral.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@theme {
+  --font-sans: "PolySans Trial", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-red: #DF342C;
+  --color-brand-red-dark: #D34242;
+  --color-brand-dark: #0A0A0A;
+  --color-brand-gray: #232323;
+  --color-brand-light: #F3F3F3;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #FFFFFF;
+  color: #1E1E1E;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html[dir="rtl"] body {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+}
+
+@keyframes scroll-left-to-right {
+  0% {
+    transform: translateX(calc(-50% - 10px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes scroll-right-to-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 10px));
+  }
+}
+
+.animate-infinite-scroll {
+  animation: scroll-right-to-left 20s linear infinite;
+}
+
+html[dir="rtl"] .animate-infinite-scroll {
+  animation: scroll-left-to-right 20s linear infinite;
+}

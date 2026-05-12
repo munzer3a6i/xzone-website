@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Any signed-in user (including anonymous) can read/write
+    // Security is enforced at the app level (credential check before anonymous sign-in)
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /teamMembers/{memberId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /team/{memberId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /carousel/{imageId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /settings/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
