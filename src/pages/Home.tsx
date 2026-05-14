@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
+import Footer from '../components/Footer';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface Review {
@@ -132,7 +133,7 @@ export const servicesData = [
   {
     num: '05',
     title: 'Printing Service',
-    image: 'https://images.unsplash.com/photo-1543168256-418811576931?q=80&w=800&auto=format&fit=crop',
+    image: '/assets/PrintingService.jpg',
     subtitle: 'Print & Packaging',
     description: 'High-quality print design and merchandising materials that make a tangible impact.'
   }
@@ -353,7 +354,7 @@ export default function Home() {
         <div className="mb-24 lg:mb-32">
           <Badge text={t('who are we')} />
           <h2 className="text-4xl md:text-5xl lg:text-[62px] leading-[1.1] font-medium mt-8 max-w-5xl text-brand-dark tracking-tight">
-            {t('We build search-first digital systems to help category leaders lead their industries.')}
+            {t('X Zone is a full-service creative and digital marketing agency built for brands that demand attention. From concept to campaign — across print, screen, and every surface in between — we turn vision into visual power.')}
           </h2>
         </div>
 
@@ -695,13 +696,13 @@ export default function Home() {
                     <Quote className="w-4 h-4 text-white rotate-180" />
                   </div>
                   <p className="text-2xl leading-snug font-light">
-                    {testimonial.reviewText}
+                    {language === 'ar' && testimonial.reviewTextAr ? testimonial.reviewTextAr : testimonial.reviewText}
                   </p>
                 </div>
                 
                 <div>
-                  <h4 className="text-xl font-medium mb-2">{testimonial.name}</h4>
-                  <p className="text-[#8F8F8F]">{testimonial.position || testimonial.role}</p>
+                  <h4 className="text-xl font-medium mb-2">{language === 'ar' && testimonial.nameAr ? testimonial.nameAr : testimonial.name}</h4>
+                  <p className="text-[#8F8F8F]">{language === 'ar' && testimonial.positionAr ? testimonial.positionAr : (testimonial.position || testimonial.role)}</p>
                 </div>
               </div>
             ))}
@@ -723,7 +724,7 @@ export default function Home() {
         <div className="max-w-[1700px] mx-auto flex flex-col items-center text-center">
           {/* Frame 11: Badge */}
           <div className="flex items-center gap-2 mb-8">
-             <div className="w-6 h-6 bg-[#DF342C] flex items-center justify-center">
+             <div className="w-6 h-6 bg-[#EA6E1A] flex items-center justify-center">
               <Plus className="w-3 h-3 text-white" />
             </div>
             <span className="text-2xl font-normal text-[#1E1E1E]">{t('Get Started')}</span>
@@ -737,7 +738,7 @@ export default function Home() {
           {/* Frame 7: Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-6">
             {/* Frame 5: View Projects */}
-            <Link to="/work" className="bg-[#DF342C] text-white px-8 py-4 h-[52px] rounded-full font-normal flex items-center gap-3 hover:opacity-90 transition-all text-xl inline-flex">
+            <Link to="/work" className="bg-[#EA6E1A] text-white px-8 py-4 h-[52px] rounded-full font-normal flex items-center gap-3 hover:opacity-90 transition-all text-xl inline-flex">
               <FlipText>
                 {t('View Projects')}
                 <div className="w-5 h-5 flex items-center justify-center">
@@ -758,54 +759,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Redesigned Footer Section */}
-      <footer className="p-4 md:p-6">
-        <div className="bg-[#0A0A0A] text-white pt-20 pb-12 px-8 md:px-12 lg:px-20 rounded-[1.5rem] relative overflow-hidden">
-          {/* Top Bar (Newsletter + Nav) */}
-          <div className="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12 mb-32">
-            {/* Frame 75: Newsletter */}
-            <div className="flex flex-col gap-6 w-full lg:w-[435px]">
-              <h3 className="text-3xl font-normal">{t('Stay updated with our news')}</h3>
-              {/* Frame 74: Input Wrapper */}
-              <div className="relative group">
-                <input 
-                  type="email" 
-                  placeholder={t('Enter your email address')} 
-                  className="w-full bg-[#1F1F1F] text-white rounded-full px-8 py-4.5 h-[55px] outline-none focus:ring-1 focus:ring-white/20 transition-all placeholder:text-gray-500"
-                />
-                {/* Rotated Submit Button */}
-                <button className={`absolute ${language === 'ar' ? 'left-2' : 'right-2'} top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all -rotate-[30deg]`}>
-                  <ArrowUpRight className={`w-4 h-4 text-black ${language === 'ar' ? 'rotate-[210deg]' : 'rotate-[30deg]'}`} />
-                </button>
-              </div>
-            </div>
-
-            {/* Frame 76: Navigation Links */}
-            <nav className="flex flex-wrap items-center gap-8 lg:gap-12 text-2xl font-normal">
-              <a href="#home" onClick={scrollTo('home')} className="hover:text-brand-red transition-colors">{t('Home')}</a>
-              <Link to="/work" className="hover:text-brand-red transition-colors">{t('Work')}</Link>
-              <Link to="/about" className="hover:text-brand-red transition-colors">{t('About Us')}</Link>
-              <Link to="/contact" className="hover:text-brand-red transition-colors">{t('Contact')}</Link>
-            </nav>
-          </div>
-
-          {/* Big Brand Text */}
-          <div className="text-center mb-16 overflow-hidden">
-            <h1 className="text-7xl sm:text-8xl md:text-9xl lg:text-[170px] leading-[1.1] font-semibold uppercase tracking-tighter text-white inline-block">
-              XZONE AGENCY
-            </h1>
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="max-w-[1700px] mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-white/50 text-lg">
-            <p>{t('Copyright © XZONE AGENCY')}</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-white transition-colors">{t('Privacy Policy')}</a>
-              <a href="#" className="hover:text-white transition-colors">{t('Terms & Conditions')}</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

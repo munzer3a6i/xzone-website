@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { FlipText, Badge } from './Home';
 import { projects as fallbackProjects } from '../data/projects';
 import { db } from '../firebase';
+import Footer from '../components/Footer';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -105,7 +106,7 @@ export default function Project() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
               >
-                <Badge text={t(project.projectType)} dark />
+                <Badge text={t(language === 'ar' && project.projectTypeAr ? project.projectTypeAr : project.projectType)} dark />
               </motion.div>
               <motion.h2 
                 initial={{ y: 40, opacity: 0 }}
@@ -113,7 +114,7 @@ export default function Project() {
                 transition={{ duration: 0.8, delay: 0.6 }}
                 className="text-6xl md:text-7xl lg:text-[100px] leading-[1.08] font-normal tracking-tight text-white"
               >
-                {project.title}
+                {language === 'ar' && project.titleAr ? project.titleAr : project.title}
               </motion.h2>
             </div>
           </div>
@@ -134,7 +135,7 @@ export default function Project() {
           >
             <Badge text={t('Description')} />
             <p className="text-xl md:text-2xl text-[#6C6C6C] leading-relaxed">
-              {project.description}
+              {language === 'ar' && project.descriptionAr ? project.descriptionAr : project.description}
             </p>
           </motion.div>
           
@@ -147,13 +148,12 @@ export default function Project() {
           >
             <Badge text={t('Services Provided')} />
             <p className="text-xl md:text-2xl text-[#6C6C6C] leading-relaxed">
-              {project.services}
+              {language === 'ar' && project.servicesAr ? project.servicesAr : project.services}
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Images Grid */}
       <section className="pb-24 lg:pb-32 px-4 md:px-8 lg:px-12 max-w-[1400px] mx-auto">
         <div className="columns-1 md:columns-2 gap-12 space-y-12">
           {project.images.map((img, i) => (
@@ -165,7 +165,7 @@ export default function Project() {
                transition={{ duration: 0.8, delay: (i % 2) * 0.2 }}
                className="break-inside-avoid"
              >
-               <img src={img} alt={`${project.title} screenshot ${i+1}`} className="w-full rounded-[10px] bg-[#F2F2F2] object-cover hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
+               <img src={img} alt={`${language === 'ar' && project.titleAr ? project.titleAr : project.title} screenshot ${i+1}`} className="w-full rounded-[10px] bg-[#F2F2F2] object-fill hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
              </motion.div>
           ))}
         </div>
@@ -186,55 +186,7 @@ export default function Project() {
       </section>
 
       {/* Footer Section */}
-      <footer className="p-4 md:p-6 mt-12">
-        <div className="bg-[#0A0A0A] text-white pt-20 pb-12 px-8 md:px-12 lg:px-20 rounded-[1.5rem] relative overflow-hidden">
-          {/* Top Bar (Newsletter + Nav) */}
-          <div className="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12 mb-32 relative z-10">
-            {/* Newsletter */}
-            <div className="flex flex-col gap-6 w-full lg:w-[435px]">
-              <h3 className="text-3xl font-normal">{t('Stay updated with our news')}</h3>
-              <div className="relative group">
-                <input 
-                  type="email" 
-                  placeholder={t('Enter your email address')} 
-                  className="w-full bg-[#1F1F1F] text-white rounded-full px-8 py-4.5 h-[55px] outline-none focus:ring-1 focus:ring-white/20 transition-all placeholder:text-gray-500"
-                />
-                <button className={`absolute ${language === 'ar' ? 'left-2' : 'right-2'} top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all -rotate-[30deg]`}>
-                  <ArrowUpRight className={`w-4 h-4 text-black ${language === 'ar' ? 'rotate-[210deg]' : 'rotate-[30deg]'}`} />
-                </button>
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <nav className="flex flex-wrap items-center gap-8 lg:gap-12 text-2xl font-normal">
-              <Link to="/" className="hover:text-brand-red transition-colors">{t('Home')}</Link>
-              <Link to="/work" className="hover:text-brand-red transition-colors">{t('Work')}</Link>
-              <Link to="/about" className="hover:text-brand-red transition-colors">{t('About Us')}</Link>
-              <Link to="/contact" className="hover:text-brand-red transition-colors">{t('Contact')}</Link>
-            </nav>
-          </div>
-
-          {/* Big Brand Text */}
-          <div className="text-center mb-16 overflow-hidden relative z-10">
-            <h1 className="text-7xl sm:text-8xl md:text-9xl lg:text-[170px] leading-[1.1] font-semibold uppercase tracking-tighter text-white inline-block">
-              XZONE AGENCY
-            </h1>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none opacity-20 hidden lg:block">
-            <img src="/assets/generated-image (5).png" alt="" className="w-full h-full object-cover" />
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="max-w-[1700px] mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-white/50 text-lg relative z-10">
-            <p>{t('Copyright © XZONE AGENCY')}</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-white transition-colors">{t('Privacy Policy')}</a>
-              <a href="#" className="hover:text-white transition-colors">{t('Terms & Conditions')}</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer className="p-4 md:p-6 mt-12" showBackground={true} />
     </div>
   );
 }

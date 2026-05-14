@@ -155,6 +155,7 @@ const FAQItem = ({ faq }: { faq: { q: string, a: string } }) => {
 
 import { projects as fallbackProjects } from '../data/projects';
 import { db } from '../firebase';
+import Footer from '../components/Footer';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 import { useLanguage } from '../contexts/LanguageContext';
@@ -208,7 +209,7 @@ export default function Work() {
             className="absolute inset-0"
           >
             <img 
-              src="/assets/generated-image (5).png" 
+              src="/assets/HeroSection.png" 
               alt="Work Hero" 
               className="w-full h-full object-cover"
               loading="lazy"
@@ -326,24 +327,24 @@ export default function Work() {
                 <div className="flex-1 flex flex-col gap-12">
                   <h3 className="text-4xl md:text-5xl font-semibold text-[#1E1E1E]">
                     <Link to={`/project/${work.id}`} className="hover:text-brand-red transition-colors">
-                      {work.title}
+                      {language === 'ar' && work.titleAr ? work.titleAr : work.title}
                     </Link>
                   </h3>
                   
                   <div className="flex flex-col gap-8">
                     <div className="flex flex-col gap-3">
                       <span className="text-lg font-semibold text-[#6C6C6C] uppercase tracking-wider">{t('Project Type')}</span>
-                      <span className="text-xl text-[#1E1E1E]">{t(work.projectType)}</span>
+                      <span className="text-xl text-[#1E1E1E]">{t(language === 'ar' && work.projectTypeAr ? work.projectTypeAr : work.projectType)}</span>
                     </div>
 
                     <div className="flex flex-col gap-3">
                       <span className="text-lg font-semibold text-[#6C6C6C] uppercase tracking-wider">{t('Description')}</span>
-                      <p className="text-xl text-[#1E1E1E] leading-relaxed max-w-md">{work.description}</p>
+                      <p className="text-xl text-[#1E1E1E] leading-relaxed max-w-md">{language === 'ar' && work.descriptionAr ? work.descriptionAr : work.description}</p>
                     </div>
 
                     <div className="flex flex-col gap-3">
                       <span className="text-lg font-semibold text-[#6C6C6C] uppercase tracking-wider">{t('Client')}</span>
-                      <span className="text-xl text-[#1E1E1E]">{work.client}</span>
+                      <span className="text-xl text-[#1E1E1E]">{language === 'ar' && work.clientAr ? work.clientAr : work.client}</span>
                     </div>
                   </div>
 
@@ -362,7 +363,7 @@ export default function Work() {
                     <img 
                       src={work.image} 
                       alt={work.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                      className="w-full h-full object-fill group-hover:scale-105 transition-transform duration-700" 
                       loading="lazy"
                       decoding="async"
                     />
@@ -379,54 +380,7 @@ export default function Work() {
         </div>
       </section>
 
-      {/* 10. Redesigned Footer Section */}
-      <footer className="p-4 md:p-6">
-        <div className="bg-[#0A0A0A] text-white pt-20 pb-12 px-8 md:px-12 lg:px-20 rounded-[1.5rem] relative overflow-hidden">
-          {/* Top Bar (Newsletter + Nav) */}
-          <div className="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12 mb-32">
-            {/* Frame 75: Newsletter */}
-            <div className="flex flex-col gap-6 w-full lg:w-[435px]">
-              <h3 className="text-3xl font-normal">{t('Stay updated with our news')}</h3>
-              {/* Frame 74: Input Wrapper */}
-              <div className="relative group">
-                <input 
-                  type="email" 
-                  placeholder={t('Enter your email address')} 
-                  className="w-full bg-[#1F1F1F] text-white rounded-full px-8 py-4.5 h-[55px] outline-none focus:ring-1 focus:ring-white/20 transition-all placeholder:text-gray-500"
-                />
-                {/* Rotated Submit Button */}
-                <button className={`absolute ${language === 'ar' ? 'left-2' : 'right-2'} top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all -rotate-[30deg]`}>
-                  <ArrowUpRight className={`w-4 h-4 text-black ${language === 'ar' ? 'rotate-[210deg]' : 'rotate-[30deg]'}`} />
-                </button>
-              </div>
-            </div>
-
-            {/* Frame 76: Navigation Links */}
-            <nav className="flex flex-wrap items-center gap-8 lg:gap-12 text-2xl font-normal">
-              <Link to="/" className="hover:text-brand-red transition-colors">{t('Home')}</Link>
-              <Link to="/work" className="hover:text-brand-red transition-colors">{t('Work')}</Link>
-              <Link to="/about" className="hover:text-brand-red transition-colors">{t('About Us')}</Link>
-              <Link to="/contact" className="hover:text-brand-red transition-colors">{t('Contact')}</Link>
-            </nav>
-          </div>
-
-          {/* Big Brand Text */}
-          <div className="text-center mb-16 overflow-hidden">
-            <h1 className="text-7xl sm:text-8xl md:text-9xl lg:text-[170px] leading-[1.1] font-semibold uppercase tracking-tighter text-white inline-block">
-              XZONE AGENCY
-            </h1>
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="max-w-[1700px] mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-white/50 text-lg">
-            <p>{t('Copyright © XZONE AGENCY')}</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-white transition-colors">{t('Privacy Policy')}</a>
-              <a href="#" className="hover:text-white transition-colors">{t('Terms & Conditions')}</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

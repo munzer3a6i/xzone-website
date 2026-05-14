@@ -6,6 +6,7 @@ import { FlipText, Badge, servicesData } from './Home';
 
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
+import Footer from '../components/Footer';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface TeamMember {
@@ -130,7 +131,7 @@ export default function About() {
         >
           <Badge text={t('founded in 2024')} />
           <p className="text-xl md:text-2xl text-[#6C6C6C] leading-relaxed mt-8">
-            {t('Breakpoint is a dynamic creative agency that transforms brands through innovative storytelling, cutting-edge technology, and data-driven strategies. Since 2020, we\'ve been crafting unforgettable experiences that resonate, inspire, and drive extraordinary results for businesses worldwide.')}
+            {t('X Zone is a full-service creative and digital marketing agency built for brands that demand attention. From concept to campaign — across print, screen, and every surface in between — we turn vision into visual power.')}
           </p>
         </motion.div>
 
@@ -209,10 +210,10 @@ export default function About() {
                       <div 
                         key={i} 
                         onMouseEnter={() => setActiveService(i)}
-                        className={`flex items-center justify-between py-12 border-b border-dashed ${isActive ? 'border-[#D34242]' : 'border-white/20'} group cursor-pointer transition-colors duration-300`}
+                        className={`flex items-center justify-between py-12 border-b border-dashed ${isActive ? 'border-[#EA6E1A]' : 'border-white/20'} group cursor-pointer transition-colors duration-300`}
                       >
                         <h3 className={`text-4xl md:text-5xl lg:text-6xl font-semibold transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{t(service.title)}</h3>
-                        <span className={`text-2xl md:text-3xl transition-colors duration-300 ${isActive ? 'text-[#D34242]' : 'text-white group-hover:text-[#D34242]'}`}>[{service.num}]</span>
+                        <span className={`text-2xl md:text-3xl transition-colors duration-300 ${isActive ? 'text-[#EA6E1A]' : 'text-white group-hover:text-[#EA6E1A]'}`}>[{service.num}]</span>
                       </div>
                     );
                   })}
@@ -235,7 +236,7 @@ export default function About() {
                       transition={{ duration: 0.3 }}
                       className="flex flex-col gap-8 w-full"
                     >
-                      <div className="rounded-3xl overflow-hidden bg-[#D34242] relative aspect-[4/3]">
+                      <div className="rounded-3xl overflow-hidden bg-[#EA6E1A] relative aspect-[4/3]">
                         <motion.img 
                           key={servicesData[activeService].image}
                           initial={{ opacity: 0, scale: 1.05 }}
@@ -293,8 +294,8 @@ export default function About() {
                     </div>
                   )}
                 </div>
-                <h3 className="text-2xl font-normal text-[#1E1E1E] mb-2">{member.name}</h3>
-                <p className="text-lg text-[#6C6C6C] text-center">{member.occupation}</p>
+                <h3 className="text-2xl font-normal text-[#1E1E1E] mb-2">{language === 'ar' && member.nameAr ? member.nameAr : member.name}</h3>
+                <p className="text-lg text-[#6C6C6C] text-center">{language === 'ar' && member.occupationAr ? member.occupationAr : member.occupation}</p>
               </div>
             ))
           ) : (
@@ -304,55 +305,7 @@ export default function About() {
       </section>
 
       {/* Footer Section */}
-      <footer className="p-4 md:p-6">
-        <div className="bg-[#0A0A0A] text-white pt-20 pb-12 px-8 md:px-12 lg:px-20 rounded-[1.5rem] relative overflow-hidden">
-          {/* Top Bar (Newsletter + Nav) */}
-          <div className="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12 mb-32 relative z-10">
-            {/* Newsletter */}
-            <div className="flex flex-col gap-6 w-full lg:w-[435px]">
-              <h3 className="text-3xl font-normal">{t('Stay updated with our news')}</h3>
-              <div className="relative group">
-                <input 
-                  type="email" 
-                  placeholder={t('Enter your email address')} 
-                  className="w-full bg-[#1F1F1F] text-white rounded-full px-8 py-4.5 h-[55px] outline-none focus:ring-1 focus:ring-white/20 transition-all placeholder:text-gray-500"
-                />
-                <button className={`absolute ${language === 'ar' ? 'left-2' : 'right-2'} top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all -rotate-[30deg]`}>
-                  <ArrowUpRight className={`w-4 h-4 text-black ${language === 'ar' ? 'rotate-[210deg]' : 'rotate-[30deg]'}`} />
-                </button>
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <nav className="flex flex-wrap items-center gap-8 lg:gap-12 text-2xl font-normal">
-              <Link to="/" className="hover:text-brand-red transition-colors">{t('Home')}</Link>
-              <Link to="/work" className="hover:text-brand-red transition-colors">{t('Work')}</Link>
-              <Link to="/about" className="hover:text-brand-red transition-colors">{t('About Us')}</Link>
-              <Link to="/contact" className="hover:text-brand-red transition-colors">{t('Contact')}</Link>
-            </nav>
-          </div>
-
-          {/* Big Brand Text */}
-          <div className="text-center mb-16 overflow-hidden relative z-10">
-            <h1 className="text-7xl sm:text-8xl md:text-9xl lg:text-[170px] leading-[1.1] font-semibold uppercase tracking-tighter text-white inline-block">
-              XZONE AGENCY
-            </h1>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none opacity-20 hidden lg:block">
-            <img src="/assets/generated-image (5).png" alt="" className="w-full h-full object-cover" />
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="max-w-[1700px] mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-white/50 text-lg relative z-10">
-            <p>{t('Copyright © XZONE AGENCY')}</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-white transition-colors">{t('Privacy Policy')}</a>
-              <a href="#" className="hover:text-white transition-colors">{t('Terms & Conditions')}</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer showBackground={true} />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db, storage } from '../firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Plus, Edit2, Trash2, LogOut, Loader2, Image as ImageIcon, Briefcase, FileText, LayoutDashboard, Settings, Upload, X, MessageSquare } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, Loader2, Image as ImageIcon, Briefcase, FileText, LayoutDashboard, Settings, Upload, X, MessageSquare, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -16,6 +16,11 @@ interface Project {
   image: string;
   images: string[];
   services: string;
+  titleAr?: string;
+  projectTypeAr?: string;
+  descriptionAr?: string;
+  clientAr?: string;
+  servicesAr?: string;
 }
 
 interface TeamMember {
@@ -24,6 +29,8 @@ interface TeamMember {
   occupation: string;
   image: string;
   order: number;
+  nameAr?: string;
+  occupationAr?: string;
 }
 
 interface Review {
@@ -34,6 +41,9 @@ interface Review {
   userImage: string;
   companyLogo: string;
   order: number;
+  nameAr?: string;
+  positionAr?: string;
+  reviewTextAr?: string;
 }
 
 interface CarouselImage {
@@ -44,7 +54,7 @@ interface CarouselImage {
 
 export default function Admin() {
   const { user, isAdmin, loading, signInCustom, updateAdminCredentials, logOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'projects' | 'team' | 'reviews' | 'carousel' | 'settings'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'team' | 'reviews' | 'carousel' | 'settings' | 'newsletter'>('projects');
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -84,6 +94,10 @@ export default function Admin() {
   const [fetchingCarousel, setFetchingCarousel] = useState(true);
   const [uploadingCarouselImage, setUploadingCarouselImage] = useState(false);
 
+  // Newsletter state
+  const [newsletterEmails, setNewsletterEmails] = useState<{id: string, email: string, createdAt: string}[]>([]);
+  const [fetchingNewsletter, setFetchingNewsletter] = useState(true);
+
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -112,9 +126,25 @@ export default function Admin() {
         fetchReviews();
       } else if (activeTab === 'carousel') {
         fetchCarouselImages();
+      } else if (activeTab === 'newsletter') {
+        fetchNewsletterEmails();
       }
     }
   }, [isAdmin, activeTab]);
+
+  const fetchNewsletterEmails = async () => {
+    try {
+      const q = query(collection(db, 'newsletter'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({ id: doc.id, email: doc.data().email, createdAt: doc.data().createdAt }));
+      setNewsletterEmails(data);
+    } catch (e) {
+      console.error(e);
+      alert('Error fetching newsletter emails.');
+    } finally {
+      setFetchingNewsletter(false);
+    }
+  };
 
   const fetchCarouselImages = async () => {
     try {
@@ -188,12 +218,17 @@ export default function Admin() {
     try {
       const projectData = {
         title: currentProject.title || '',
+        titleAr: currentProject.titleAr || '',
         projectType: currentProject.projectType || '',
+        projectTypeAr: currentProject.projectTypeAr || '',
         description: currentProject.description || '',
+        descriptionAr: currentProject.descriptionAr || '',
         client: currentProject.client || '',
+        clientAr: currentProject.clientAr || '',
         image: currentProject.image || '',
         images: currentProject.images || [],
         services: currentProject.services || '',
+        servicesAr: currentProject.servicesAr || '',
       };
 
       if (currentProject.id) {
@@ -250,7 +285,9 @@ export default function Admin() {
     try {
       const memberData = {
         name: currentMember.name || '',
+        nameAr: currentMember.nameAr || '',
         occupation: currentMember.occupation || '',
+        occupationAr: currentMember.occupationAr || '',
         image: currentMember.image || '',
         order: Number(currentMember.order) || 0,
       };
@@ -328,8 +365,11 @@ export default function Admin() {
     try {
       const reviewData = {
         name: currentReview.name || '',
+        nameAr: currentReview.nameAr || '',
         position: currentReview.position || '',
+        positionAr: currentReview.positionAr || '',
         reviewText: currentReview.reviewText || '',
+        reviewTextAr: currentReview.reviewTextAr || '',
         userImage: currentReview.userImage || '',
         companyLogo: currentReview.companyLogo || '',
         order: Number(currentReview.order) || 0,
@@ -576,6 +616,13 @@ export default function Admin() {
             <Settings className="w-5 h-5" />
             Settings
           </button>
+          <button 
+            onClick={() => setActiveTab('newsletter')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors w-full ${activeTab === 'newsletter' ? 'bg-brand-dark text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-brand-dark'}`}
+          >
+            <Mail className="w-5 h-5" />
+            Newsletter
+          </button>
         </nav>
         
         <div className="mt-auto pt-6 border-t border-gray-100 flex items-center justify-between">
@@ -635,49 +682,89 @@ export default function Admin() {
                 <form onSubmit={handleSave} className="flex flex-col gap-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Project Title</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={currentProject.title || ''} 
-                      onChange={e => setCurrentProject({...currentProject, title: e.target.value})}
-                      className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
-                      placeholder="e.g. Zadna"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Project Type</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={currentProject.projectType || ''} 
-                      onChange={e => setCurrentProject({...currentProject, projectType: e.target.value})}
-                      className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
-                      placeholder="e.g. Corporate Branding"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Client Name</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={currentProject.client || ''} 
-                      onChange={e => setCurrentProject({...currentProject, client: e.target.value})}
-                      className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
-                      placeholder="e.g. TAG company LTD."
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Services Provided</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={currentProject.services || ''} 
-                      onChange={e => setCurrentProject({...currentProject, services: e.target.value})}
-                      className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
-                      placeholder="e.g. Brand Design, UI/UX Design"
-                    />
-                  </div>
+                      <label className="text-sm font-medium text-gray-700">Project Title (English)</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={currentProject.title || ''} 
+                        onChange={e => setCurrentProject({...currentProject, title: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
+                        placeholder="e.g. Zadna"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Project Title (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentProject.titleAr || ''} 
+                        onChange={e => setCurrentProject({...currentProject, titleAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: زادنا"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Project Type (English)</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={currentProject.projectType || ''} 
+                        onChange={e => setCurrentProject({...currentProject, projectType: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
+                        placeholder="e.g. Corporate Branding"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Project Type (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentProject.projectTypeAr || ''} 
+                        onChange={e => setCurrentProject({...currentProject, projectTypeAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: هوية مؤسسية"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Client Name (English)</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={currentProject.client || ''} 
+                        onChange={e => setCurrentProject({...currentProject, client: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
+                        placeholder="e.g. TAG company LTD."
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Client Name (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentProject.clientAr || ''} 
+                        onChange={e => setCurrentProject({...currentProject, clientAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: شركة تاج المحدودة"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Services Provided (English)</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={currentProject.services || ''} 
+                        onChange={e => setCurrentProject({...currentProject, services: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
+                        placeholder="e.g. Brand Design, UI/UX Design"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Services Provided (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentProject.servicesAr || ''} 
+                        onChange={e => setCurrentProject({...currentProject, servicesAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: تصميم الهوية، تصميم واجهات المستخدم"
+                      />
+                    </div>
                   <div className="flex flex-col gap-2 md:col-span-2">
                     <label className="text-sm font-medium text-gray-700">Main Display Image</label>
                     <div className="flex items-center gap-4">
@@ -750,16 +837,28 @@ export default function Admin() {
                   )}
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-gray-700">Full Description</label>
-                  <textarea 
-                    required
-                    rows={5}
-                    value={currentProject.description || ''} 
-                    onChange={e => setCurrentProject({...currentProject, description: e.target.value})}
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all resize-none"
-                    placeholder="Project description..."
-                  />
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Full Description (English)</label>
+                    <textarea 
+                      required
+                      rows={5}
+                      value={currentProject.description || ''} 
+                      onChange={e => setCurrentProject({...currentProject, description: e.target.value})}
+                      className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all resize-none"
+                      placeholder="Project description..."
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Full Description (Arabic)</label>
+                    <textarea 
+                      rows={5}
+                      value={currentProject.descriptionAr || ''} 
+                      onChange={e => setCurrentProject({...currentProject, descriptionAr: e.target.value})}
+                      className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all resize-none text-right font-arabic"
+                      placeholder="وصف المشروع..."
+                    />
+                  </div>
                 </div>
 
                 <div className="pt-6 border-t border-gray-100 flex justify-end">
@@ -874,7 +973,7 @@ export default function Admin() {
                 <form onSubmit={handleSaveMember} className="flex flex-col gap-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Full Name</label>
+                      <label className="text-sm font-medium text-gray-700">Full Name (English)</label>
                       <input 
                         type="text" 
                         required
@@ -885,7 +984,17 @@ export default function Admin() {
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Occupation / Role</label>
+                      <label className="text-sm font-medium text-gray-700">Full Name (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentMember.nameAr || ''} 
+                        onChange={e => setCurrentMember({...currentMember, nameAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: أحمد محمد"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Occupation / Role (English)</label>
                       <input 
                         type="text" 
                         required
@@ -893,6 +1002,16 @@ export default function Admin() {
                         onChange={e => setCurrentMember({...currentMember, occupation: e.target.value})}
                         className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
                         placeholder="e.g. Lead Designer"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Occupation / Role (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentMember.occupationAr || ''} 
+                        onChange={e => setCurrentMember({...currentMember, occupationAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: مصمم رئيسي"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
@@ -1045,7 +1164,7 @@ export default function Admin() {
                 <form onSubmit={handleSaveReview} className="flex flex-col gap-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Full Name</label>
+                      <label className="text-sm font-medium text-gray-700">Full Name (English)</label>
                       <input 
                         type="text" 
                         required
@@ -1056,7 +1175,17 @@ export default function Admin() {
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Position / Title</label>
+                      <label className="text-sm font-medium text-gray-700">Full Name (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentReview.nameAr || ''} 
+                        onChange={e => setCurrentReview({...currentReview, nameAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: سارة محمد"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Position / Title (English)</label>
                       <input 
                         type="text" 
                         required
@@ -1066,9 +1195,19 @@ export default function Admin() {
                         placeholder="e.g. CEO at Company"
                       />
                     </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Position / Title (Arabic)</label>
+                      <input 
+                        type="text" 
+                        value={currentReview.positionAr || ''} 
+                        onChange={e => setCurrentReview({...currentReview, positionAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
+                        placeholder="مثال: المدير التنفيذي"
+                      />
+                    </div>
                     
                     <div className="flex flex-col gap-2 md:col-span-2">
-                      <label className="text-sm font-medium text-gray-700">Review Text</label>
+                      <label className="text-sm font-medium text-gray-700">Review Text (English)</label>
                       <textarea 
                         required
                         rows={4}
@@ -1076,6 +1215,16 @@ export default function Admin() {
                         onChange={e => setCurrentReview({...currentReview, reviewText: e.target.value})}
                         className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all resize-none"
                         placeholder="Enter the review text..."
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2 md:col-span-2">
+                      <label className="text-sm font-medium text-gray-700">Review Text (Arabic)</label>
+                      <textarea 
+                        rows={4}
+                        value={currentReview.reviewTextAr || ''} 
+                        onChange={e => setCurrentReview({...currentReview, reviewTextAr: e.target.value})}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all resize-none text-right font-arabic"
+                        placeholder="أدخل نص التقييم..."
                       />
                     </div>
 
@@ -1354,6 +1503,55 @@ export default function Admin() {
                   </div>
                 </form>
               </div>
+            </div>
+          )}
+
+          {/* Newsletter Tab */}
+          {activeTab === 'newsletter' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-end">
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight mb-2 text-brand-dark">Newsletter Subscribers</h2>
+                  <p className="text-gray-500">Manage your newsletter subscription list</p>
+                </div>
+              </div>
+
+              {fetchingNewsletter ? (
+                <div className="flex justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-red" />
+                </div>
+              ) : newsletterEmails.length === 0 ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                    <Mail className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">No subscribers yet</h3>
+                  <p className="text-gray-500 max-w-md mx-auto">Emails from the footer newsletter form will appear here.</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="px-6 py-4 font-medium text-gray-600">Email</th>
+                        <th className="px-6 py-4 font-medium text-gray-600">Subscribed At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {newsletterEmails.map((subscriber) => (
+                        <tr key={subscriber.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="font-medium text-gray-900">{subscriber.email}</span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-500">
+                            {new Date(subscriber.createdAt).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>

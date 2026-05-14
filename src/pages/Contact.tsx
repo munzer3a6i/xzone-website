@@ -1,12 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowUpRight, ArrowRight, ArrowDownRight, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { FlipText, Badge } from './Home';
 import { useLanguage } from '../contexts/LanguageContext';
+import Footer from '../components/Footer';
 
 export default function Contact() {
   const { t, language, toggleLanguage } = useLanguage();
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+
+  const handleSubmit = () => {
+    const subject = encodeURIComponent(`New Contact from ${formData.name}`);
+    const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\n\nMessage:\n${formData.message}`);
+    window.location.href = `mailto:x.zone.sd249@gmail.com?subject=${subject}&body=${body}`;
+  };
+
   return (
     <div className={`min-h-screen bg-white selection:bg-brand-red selection:text-white ${language === 'ar' ? 'font-arabic' : ''}`}>
       {/* Hero Section */}
@@ -20,7 +35,7 @@ export default function Contact() {
             className="absolute inset-0"
           >
             <img 
-              src="/assets/generated-image (5).png" 
+              src="/assets/HeroSection.png" 
               alt="Contact Hero" 
               className="w-full h-full object-cover"
               loading="lazy"
@@ -107,6 +122,8 @@ export default function Contact() {
               <div className="relative flex items-center">
                 <input 
                   type="text" 
+                  value={formData.name}
+                  onChange={e => setFormData({...formData, name: e.target.value})}
                   placeholder={t('Full Name')} 
                   className="w-full h-[55px] px-6 rounded-full border border-[#6C6C6C] bg-transparent text-[#1E1E1E] text-lg focus:outline-none focus:border-[#1E1E1E] transition-colors placeholder:text-[#6C6C6C]"
                 />
@@ -114,6 +131,8 @@ export default function Contact() {
               <div className="relative flex items-center">
                 <input 
                   type="email" 
+                  value={formData.email}
+                  onChange={e => setFormData({...formData, email: e.target.value})}
                   placeholder={t('Email Address')} 
                   className="w-full h-[55px] px-6 rounded-full border border-[#6C6C6C] bg-transparent text-[#1E1E1E] text-lg focus:outline-none focus:border-[#1E1E1E] transition-colors placeholder:text-[#6C6C6C]"
                 />
@@ -121,19 +140,23 @@ export default function Contact() {
               <div className="relative flex items-center">
                 <input 
                   type="tel" 
+                  value={formData.phone}
+                  onChange={e => setFormData({...formData, phone: e.target.value})}
                   placeholder={t('Phone Number')} 
                   className="w-full h-[55px] px-6 rounded-full border border-[#6C6C6C] bg-transparent text-[#1E1E1E] text-lg focus:outline-none focus:border-[#1E1E1E] transition-colors placeholder:text-[#6C6C6C]"
                 />
               </div>
               <div className="relative flex items-start">
                 <textarea 
+                  value={formData.message}
+                  onChange={e => setFormData({...formData, message: e.target.value})}
                   placeholder={t('Message')} 
                   rows={4}
                   className="w-full py-5 px-6 rounded-[32px] border border-[#6C6C6C] bg-transparent text-[#1E1E1E] text-lg focus:outline-none focus:border-[#1E1E1E] transition-colors resize-none placeholder:text-[#6C6C6C]"
                 />
               </div>
               <div className="mt-2">
-                <button type="button" className="bg-[#1E1E1E] text-white px-8 h-[52px] rounded-full font-medium flex items-center gap-3 hover:bg-black transition-colors w-max text-xl">
+                <button type="button" onClick={handleSubmit} className="bg-[#1E1E1E] text-white px-8 h-[52px] rounded-full font-medium flex items-center gap-3 hover:bg-black transition-colors w-max text-xl">
                   <FlipText>
                     {t('Send us a message')}
                     <div className="mt-1">
@@ -180,55 +203,7 @@ export default function Contact() {
       </section>
 
       {/* Footer Section */}
-      <footer className="p-4 md:p-6 mt-12">
-        <div className="bg-[#0A0A0A] text-white pt-20 pb-12 px-8 md:px-12 lg:px-20 rounded-[1.5rem] relative overflow-hidden">
-          {/* Top Bar (Newsletter + Nav) */}
-          <div className="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12 mb-32 relative z-10">
-            {/* Newsletter */}
-            <div className="flex flex-col gap-6 w-full lg:w-[435px]">
-              <h3 className="text-3xl font-normal">{t('Stay updated with our news')}</h3>
-              <div className="relative group">
-                <input 
-                  type="email" 
-                  placeholder={t('Enter your email address')} 
-                  className="w-full bg-[#1F1F1F] text-white rounded-full px-8 py-4.5 h-[55px] outline-none focus:ring-1 focus:ring-white/20 transition-all placeholder:text-gray-500"
-                />
-                <button className={`absolute ${language === 'ar' ? 'left-2' : 'right-2'} top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all -rotate-[30deg]`}>
-                  <ArrowUpRight className={`w-4 h-4 text-black ${language === 'ar' ? 'rotate-[210deg]' : 'rotate-[30deg]'}`} />
-                </button>
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <nav className="flex flex-wrap items-center gap-8 lg:gap-12 text-2xl font-normal">
-              <Link to="/" className="hover:text-brand-red transition-colors">{t('Home')}</Link>
-              <Link to="/work" className="hover:text-brand-red transition-colors">{t('Work')}</Link>
-              <Link to="/about" className="hover:text-brand-red transition-colors">{t('About Us')}</Link>
-              <Link to="/contact" className="hover:text-brand-red transition-colors">{t('Contact')}</Link>
-            </nav>
-          </div>
-
-          {/* Big Brand Text */}
-          <div className="text-center mb-16 overflow-hidden relative z-10">
-            <h1 className="text-7xl sm:text-8xl md:text-9xl lg:text-[170px] leading-[1.1] font-semibold uppercase tracking-tighter text-white inline-block">
-              XZONE AGENCY
-            </h1>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none opacity-20 hidden lg:block">
-            <img src="/assets/generated-image (5).png" alt="" className="w-full h-full object-cover" />
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="max-w-[1700px] mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-white/50 text-lg relative z-10">
-            <p>{t('Copyright © XZONE AGENCY')}</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-white transition-colors">{t('Privacy Policy')}</a>
-              <a href="#" className="hover:text-white transition-colors">{t('Terms & Conditions')}</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer className="p-4 md:p-6 mt-12" showBackground={true} />
     </div>
   );
 }
