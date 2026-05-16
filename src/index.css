@@ -49,8 +49,10 @@ html[dir="rtl"] body {
 
 .animate-infinite-scroll {
   animation: scroll-right-to-left 20s linear infinite;
+  will-change: transform;
 }
 
 html[dir="rtl"] .animate-infinite-scroll {
   animation: scroll-left-to-right 20s linear infinite;
+  will-change: transform;
 }

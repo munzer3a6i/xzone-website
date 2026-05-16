@@ -32,6 +32,7 @@ export const FlipText = ({ children }: { children: React.ReactNode }) => {
         variants={{ initial: { y: 0 }, hover: { y: "-100%" } }} 
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="flex items-center gap-2"
+        style={{ willChange: 'transform' }}
       >
         {children}
       </motion.div>
@@ -39,6 +40,7 @@ export const FlipText = ({ children }: { children: React.ReactNode }) => {
         className="absolute inset-0 flex items-center gap-2" 
         variants={{ initial: { y: "100%" }, hover: { y: 0 } }} 
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        style={{ willChange: 'transform' }}
       >
         {children}
       </motion.div>
@@ -221,7 +223,7 @@ export default function Home() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="absolute inset-0"
-            style={{ willChange: 'transform' }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <img 
               src="/assets/HeroSection.png" 
