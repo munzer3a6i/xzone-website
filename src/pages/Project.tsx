@@ -7,6 +7,7 @@ import { projects as fallbackProjects } from '../data/projects';
 import { db } from '../firebase';
 import Footer from '../components/Footer';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { normalizeServices, SERVICE_TAG_AR } from '../data/serviceTags';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Project() {
@@ -147,9 +148,16 @@ export default function Project() {
             className="flex flex-col gap-6"
           >
             <Badge text={t('Services Provided')} />
-            <p className="text-xl md:text-2xl text-[#6C6C6C] leading-relaxed">
-              {language === 'ar' && project.servicesAr ? project.servicesAr : project.services}
-            </p>
+            <div className="flex flex-wrap gap-3">
+              {normalizeServices(project.services).map(tag => (
+                <span 
+                  key={tag}
+                  className="px-6 py-3 rounded-full border border-[#D7D7D7] text-lg text-[#1E1E1E]"
+                >
+                  {language === 'ar' ? (SERVICE_TAG_AR[tag] || tag) : tag}
+                </span>
+              ))}
+            </div>
           </motion.div>
         </div>
       </section>

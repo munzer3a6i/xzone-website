@@ -160,6 +160,8 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 import { useLanguage } from '../contexts/LanguageContext';
 import { Globe } from 'lucide-react';
+import { normalizeServices, SERVICE_TAG_AR } from '../data/serviceTags';
+
 export default function Work() {
   const { t, language, toggleLanguage } = useLanguage();
   const [activeFilter, setActiveFilter] = useState('All');
@@ -170,9 +172,21 @@ export default function Work() {
     // Fetch projects from Firestore
     const fetchProjects = async () => {
       try {
-        const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const snapshot = await getDocs(collection(db, 'projects'));
+        let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        data.sort((a, b) => {
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          if (a.order !== undefined) return -1;
+          if (b.order !== undefined) return 1;
+          
+          const dateA = a.createdAt?.toMillis?.() || 0;
+          const dateB = b.createdAt?.toMillis?.() || 0;
+          return dateB - dateA;
+        });
+        
         setDbProjects(data);
       } catch (e) {
         console.error("Error fetching projects", e);
@@ -190,11 +204,24 @@ export default function Work() {
 
   const projectsToDisplay = dbProjects.length > 0 ? dbProjects : fallbackProjects;
 
-  const categories = ['All', ...Array.from(new Set(projectsToDisplay.map(p => p.projectType)))];
+  // Build unique tags from all projects
+  const tagSet = new Set<string>();
+  projectsToDisplay.forEach(p => {
+    const tags = normalizeServices(p.services);
+    tags.forEach(tag => {
+      // Only include valid predefined tags, otherwise old free-text services will clutter the filter
+      if (SERVICE_TAG_AR[tag]) {
+        tagSet.add(tag);
+      }
+    });
+  });
+  
+  // Create category buttons (English names)
+  const categories = ['All', ...Array.from(tagSet)];
   
   const filteredProjects = activeFilter === 'All' 
     ? projectsToDisplay 
-    : projectsToDisplay.filter(p => p.projectType === activeFilter);
+    : projectsToDisplay.filter(p => normalizeServices(p.services).includes(activeFilter));
 
   return (
     <div className={`min-h-screen bg-white selection:bg-brand-red selection:text-white ${language === 'ar' ? 'font-arabic' : ''}`}>
@@ -295,7 +322,6 @@ export default function Work() {
 
       {/* Projects List */}
       <section className="py-24 lg:py-32 px-4 md:px-8 lg:px-12 max-w-[1700px] mx-auto">
-        {/* Filters */}
         <div className="flex flex-wrap items-center gap-4 mb-20">
           {categories.map((category) => (
             <button
@@ -307,7 +333,9 @@ export default function Work() {
                   : 'bg-[#F2F2F2] text-brand-dark hover:bg-gray-200'
               }`}
             >
-              {t(category)}
+              {category === 'All' 
+                ? t('All') 
+                : (language === 'ar' ? (SERVICE_TAG_AR[category] || category) : category)}
             </button>
           ))}
         </div>

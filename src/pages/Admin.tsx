@@ -3,7 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { db, storage } from '../firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Plus, Edit2, Trash2, LogOut, Loader2, Image as ImageIcon, Briefcase, FileText, LayoutDashboard, Settings, Upload, X, MessageSquare, Mail } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, Loader2, Image as ImageIcon, Briefcase, FileText, LayoutDashboard, Settings, Upload, X, MessageSquare, Mail, ArrowUp, ArrowDown } from 'lucide-react';
+import { SERVICE_TAGS, normalizeServices } from '../data/serviceTags';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -15,12 +16,13 @@ interface Project {
   client: string;
   image: string;
   images: string[];
-  services: string;
+  services: string | string[];
   titleAr?: string;
   projectTypeAr?: string;
   descriptionAr?: string;
   clientAr?: string;
   servicesAr?: string;
+  order?: number;
 }
 
 interface TeamMember {
@@ -200,9 +202,24 @@ export default function Admin() {
 
   const fetchProjects = async () => {
     try {
-      const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+      // Fetch all projects without orderBy, so we don't exclude ones without an 'order' field
+      const snapshot = await getDocs(collection(db, 'projects'));
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+      
+      // Sort in memory: projects with 'order' first (ascending), then fallback to createdAt (descending)
+      data.sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        if (a.order !== undefined) return -1;
+        if (b.order !== undefined) return 1;
+        
+        // Both missing order, sort by createdAt descending
+        const dateA = a.createdAt?.toMillis?.() || 0;
+        const dateB = b.createdAt?.toMillis?.() || 0;
+        return dateB - dateA;
+      });
+      
       setProjects(data);
     } catch (e) {
       console.error(e);
@@ -216,6 +233,7 @@ export default function Admin() {
     e.preventDefault();
     setSaving(true);
     try {
+      const servicesArray = normalizeServices(currentProject.services);
       const projectData = {
         title: currentProject.title || '',
         titleAr: currentProject.titleAr || '',
@@ -227,8 +245,8 @@ export default function Admin() {
         clientAr: currentProject.clientAr || '',
         image: currentProject.image || '',
         images: currentProject.images || [],
-        services: currentProject.services || '',
-        servicesAr: currentProject.servicesAr || '',
+        services: servicesArray,
+        order: currentProject.order ?? projects.length,
       };
 
       if (currentProject.id) {
@@ -262,6 +280,26 @@ export default function Admin() {
         console.error(e);
         alert('Error deleting project');
       }
+    }
+  };
+
+  const handleMoveProject = async (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= projects.length) return;
+    
+    const updated = [...projects];
+    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    setProjects(updated);
+
+    // Batch update order fields
+    try {
+      for (let i = 0; i < updated.length; i++) {
+        const docRef = doc(db, 'projects', updated[i].id);
+        await updateDoc(docRef, { order: i });
+      }
+    } catch (e) {
+      console.error('Error updating order:', e);
+      fetchProjects(); // revert on error
     }
   };
 
@@ -744,26 +782,38 @@ export default function Admin() {
                         placeholder="مثال: شركة تاج المحدودة"
                       />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Services Provided (English)</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={currentProject.services || ''} 
-                        onChange={e => setCurrentProject({...currentProject, services: e.target.value})}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all"
-                        placeholder="e.g. Brand Design, UI/UX Design"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Services Provided (Arabic)</label>
-                      <input 
-                        type="text" 
-                        value={currentProject.servicesAr || ''} 
-                        onChange={e => setCurrentProject({...currentProject, servicesAr: e.target.value})}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark transition-all text-right font-arabic"
-                        placeholder="مثال: تصميم الهوية، تصميم واجهات المستخدم"
-                      />
+                    <div className="flex flex-col gap-2 md:col-span-2">
+                      <label className="text-sm font-medium text-gray-700">Services Provided</label>
+                      <div className="flex flex-wrap gap-2">
+                        {SERVICE_TAGS.map(tag => {
+                          const currentTags = normalizeServices(currentProject.services);
+                          const isSelected = currentTags.includes(tag.en);
+                          return (
+                            <button
+                              key={tag.en}
+                              type="button"
+                              onClick={() => {
+                                const tags = normalizeServices(currentProject.services);
+                                const updated = isSelected 
+                                  ? tags.filter(t => t !== tag.en)
+                                  : [...tags, tag.en];
+                                setCurrentProject({...currentProject, services: updated});
+                              }}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                                isSelected 
+                                  ? 'bg-brand-dark text-white border-brand-dark' 
+                                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-brand-dark hover:text-brand-dark'
+                              }`}
+                            >
+                              {tag.en}
+                              <span className="text-xs opacity-60 ml-1.5">({tag.ar})</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {normalizeServices(currentProject.services).length === 0 && (
+                        <p className="text-xs text-gray-400 mt-1">Click tags above to select services for this project.</p>
+                      )}
                     </div>
                   <div className="flex flex-col gap-2 md:col-span-2">
                     <label className="text-sm font-medium text-gray-700">Main Display Image</label>
@@ -936,13 +986,32 @@ export default function Admin() {
                             <Edit2 className="w-4 h-4" />
                             Edit
                           </button>
-                          <button 
-                            onClick={() => handleDelete(p.id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => handleMoveProject(projects.indexOf(p), 'up')}
+                              disabled={projects.indexOf(p) === 0}
+                              className="text-gray-400 hover:text-brand-dark transition-colors p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleMoveProject(projects.indexOf(p), 'down')}
+                              disabled={projects.indexOf(p) === projects.length - 1}
+                              className="text-gray-400 hover:text-brand-dark transition-colors p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </button>
+                            <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                            <button 
+                              onClick={() => handleDelete(p.id)}
+                              className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
